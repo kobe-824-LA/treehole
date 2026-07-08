@@ -10,7 +10,7 @@ const OpenAI = require('openai');
 
 // 配置 DeepSeek 客户端
 const openai = new OpenAI({
-  apiKey: 'sk-你的API密钥填在这里',  // ← 替换成你的真实 Key
+  apiKey: process.env.DEEPSEEK_API_KEY
   baseURL: 'https://api.deepseek.com',
 });
 
