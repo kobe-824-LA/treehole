@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>树洞 · 暗室</title>
+
+  <!-- PWA 配置 -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="树洞">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="theme-color" content="#121212">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #121212;
+      color: rgba(220, 220, 220, 0.8);
+      font-family: 'Times New Roman', '宋体', 'Noto Serif SC', serif;
+      font-weight: 300;
+      font-size: 16px;
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 20px;
+    }
+    .glow {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(180, 180, 200, 0.6) 0%, rgba(100, 100, 140, 0.2) 60%, transparent 70%);
+      box-shadow: 0 0 40px rgba(150, 150, 200, 0.3), 0 0 80px rgba(100, 100, 160, 0.15);
+      animation: breathe 4s ease-in-out infinite;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+    .glow:active {
+      transform: scale(0.95);
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+    .tell-btn {
+      position: absolute;
+      bottom: 60px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .tell-btn:active {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .input-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #121212;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0s 0.3s, opacity 0.3s;
+      z-index: 10;
+    }
+    .input-overlay.active {
+      visibility: visible;
+      opacity: 1;
+      transition: visibility 0s, opacity 0.3s;
+    }
+    textarea {
+      width: 100%;
+      max-width: 400px;
+      height: 200px;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: none;
+      color: rgba(220, 220, 220, 0.9);
+      font-family: inherit;
+      font-size: 18px;
+      line-height: 1.6;
+      caret-color: rgba(255, 255, 255, 0.3);
+    }
+    textarea::placeholder {
+      color: rgba(255, 255, 255, 0.15);
+      font-style: italic;
+    }
+    .submit-btn {
+      margin-top: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.6);
+      padding: 12px 40px;
+      border-radius: 30px;
+      font-family: inherit;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .submit-btn:active {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+    .close-btn {
+      position: absolute;
+      top: 40px;
+      right: 25px;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 28px;
+      cursor: pointer;
+    }
+    .waiting-text {
+      position: absolute;
+      bottom: 180px;
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 14px;
+      visibility: hidden;
+    }
+    .waiting-text.active {
+      visibility: visible;
+    }
+    .letter-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #121212;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0s 0.3s, opacity 0.3s;
+      z-index: 20;
+    }
+    .letter-overlay.active {
+      visibility: visible;
+      opacity: 1;
+      transition: visibility 0s, opacity 0.3s;
+    }
+    .letter-content {
+      max-width: 400px;
+      color: rgba(220, 220, 220, 0.85);
+      font-size: 18px;
+      line-height: 1.8;
+      text-align: center;
+      margin-bottom: 40px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.5s ease 0.2s;
+    }
+    .letter-overlay.active .letter-content {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .letter-signature {
+      color: rgba(255, 255, 255, 0.25);
+      font-size: 14px;
+      margin-bottom: 60px;
+    }
+    .dismiss-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.4);
+      padding: 10px 30px;
+      border-radius: 30px;
+      font-family: inherit;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .dismiss-btn:active {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .disappear {
+      animation: dissolve 0.8s ease forwards;
+    }
+    @keyframes dissolve {
+      to {
+        opacity: 0;
+        filter: blur(10px);
+        transform: translateY(-10px) scale(0.95);
+      }
+    }
+    .identity {
+      position: absolute;
+      top: 50px;
+      color: rgba(255, 255, 255, 0.15);
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="identity" id="identity"></div>
+    <div class="glow" id="glow"></div>
+    <div class="tell-btn" id="tellBtn">✧</div>
+    <div class="waiting-text" id="waitingText">树洞正在感受你的频率……</div>
+  </div>
+
+  <div class="input-overlay" id="inputOverlay">
+    <div class="close-btn" id="closeInput">×</div>
+    <textarea id="userInput" placeholder="在这里写下你想投进树洞的……"></textarea>
+    <button class="submit-btn" id="submitBtn">投入树洞</button>
+  </div>
+
+  <div class="letter-overlay" id="letterOverlay">
+    <div class="letter-content" id="letterContent"></div>
+    <div class="letter-signature">—— 一个在此刻与你共振的树洞</div>
+    <button class="dismiss-btn" id="dismissBtn">让这份共鸣消散</button>
+  </div>
+
+  <script>
+    // 注册 Service Worker（PWA 离线支持）
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('Service Worker 已注册'))
+        .catch((err) => console.log('Service Worker 注册失败:', err));
+    }
+
+    // 生成随机身份
+    const colors = ['靛蓝', '苔绿', '暮紫', '烟灰', '月白', '墨色', '灰蓝', '枯绿'];
+    const elements = ['苔原', '深海', '雾林', '荒原', '静湖', '洞穴', '晚风', '旧巷'];
+    function randomIdentity() {
+      const c = colors[Math.floor(Math.random() * colors.length)];
+      const e = elements[Math.floor(Math.random() * elements.length)];
+      return `此刻的 · ${c}${e}`;
+    }
+    document.getElementById('identity').textContent = randomIdentity();
+
+    // DOM 元素
+    const glow = document.getElementById('glow');
+    const tellBtn = document.getElementById('tellBtn');
+    const waitingText = document.getElementById('waitingText');
+    const inputOverlay = document.getElementById('inputOverlay');
+    const userInput = document.getElementById('userInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const closeInput = document.getElementById('closeInput');
+    const letterOverlay = document.getElementById('letterOverlay');
+    const letterContent = document.getElementById('letterContent');
+    const dismissBtn = document.getElementById('dismissBtn');
+
+    // 打开输入界面
+    function openInput() {
+      inputOverlay.classList.add('active');
+      userInput.focus();
+    }
+    tellBtn.addEventListener('click', openInput);
+    glow.addEventListener('click', openInput);
+
+    // 关闭输入界面
+    closeInput.addEventListener('click', () => {
+      inputOverlay.classList.remove('active');
+      userInput.value = '';
+    });
+
+    // 提交
+    submitBtn.addEventListener('click', async () => {
+      const content = userInput.value.trim();
+      if (!content) return;
+
+      inputOverlay.classList.remove('active');
+      waitingText.classList.add('active');
+      submitBtn.disabled = true;
+      tellBtn.style.pointerEvents = 'none';
+      glow.style.pointerEvents = 'none';
+
+      // 投入动画
+      glow.style.transform = 'scale(1.4)';
+      glow.style.boxShadow = '0 0 60px rgba(150,150,200,0.5)';
+      setTimeout(() => {
+        glow.style.transform = 'scale(0.9)';
+        glow.style.boxShadow = '0 0 30px rgba(100,100,160,0.2)';
+      }, 200);
+
+      try {
+        const response = await fetch('/echo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, type: 'text' })
+        });
+        const data = await response.json();
+        
+        waitingText.classList.remove('active');
+        
+        // 光点闪烁
+        glow.style.animation = 'none';
+        glow.offsetHeight;
+        glow.style.animation = 'breathe 0.5s ease-in-out 3';
+        glow.style.transform = 'scale(1)';
+        glow.style.boxShadow = '0 0 40px rgba(150,150,200,0.3), 0 0 80px rgba(100,100,160,0.15)';
+        
+        letterContent.textContent = data.echo;
+        letterOverlay.classList.add('active');
+      } catch (error) {
+        waitingText.classList.remove('active');
+        letterContent.textContent = '树洞似乎打了个盹……但你的话，它已经收到了。';
+        letterOverlay.classList.add('active');
+      }
+
+      userInput.value = '';
+      submitBtn.disabled = false;
+      tellBtn.style.pointerEvents = 'auto';
+      glow.style.pointerEvents = 'auto';
+    });
+
+    // 让回音消散
+    dismissBtn.addEventListener('click', () => {
+      letterContent.classList.add('disappear');
+      setTimeout(() => {
+        letterOverlay.classList.remove('active');
+        letterContent.classList.remove('disappear');
+        letterContent.textContent = '';
+      }, 800);
+    });
+  </script>
+</body>
+</html>
