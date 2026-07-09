@@ -1,6 +1,6 @@
 ﻿// server.js
 // 树洞后端 - 使用 Node.js + Express + DeepSeek AI
-
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,7 +10,7 @@ const OpenAI = require('openai');
 
 // 配置 DeepSeek 客户端
 const openai = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY
+  apiKey: process.env.DEEPSEEK_API_KEY,
   baseURL: 'https://api.deepseek.com',
 });
 
